@@ -1,0 +1,23 @@
+Package: SCENT
+Title: Single Cell Entropy
+Version: 1.0.2
+Description: SCENT is an R-package for estimating differentiation
+        potency of single cells from scRNA-Seq data. 
+Date: 2020-10-23
+Author:  Andrew E Teschendorff
+Maintainer: Andrew Teschendorff <andrew@picb.ac.cn>
+Depends: R (>= 3.6)
+Imports: igraph, mclust, parallel, stats, Matrix, qlcMatrix, destiny, marray
+Suggests: roxygen2, BiocStyle, knitr, rmarkdown
+VignetteBuilder: knitr
+License: GPL-3
+LazyData: true
+NeedsCompilation: no
+RoxygenNote: 7.1.0
+Encoding: UTF-8
+URL: https://github.com/aet21/SCENT
+BugReports: https://github.com/aet21/SCENT/issues
+biocViews: SingleCell, SystemsBiology, Network, CellBiology,
+        GeneExpression, RNASeq, SingleCell, Software, Transcriptomics,
+        Visualization
+git_url: https://github.com/aet21/SCENT

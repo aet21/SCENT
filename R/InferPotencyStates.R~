@@ -1,0 +1,141 @@
+#' @title 
+#' Infer Distinct potency states from cells' SR values
+#' 
+#' @aliases InferPotencyStates
+#'  
+#' @description 
+#' This function infers the discrete potency states of single cells and 
+#' its distribution across the single cell population.
+#' 
+#' @param sr.o
+#' The output object of \code{CompSRana} function.
+#' 
+#' @param pheno.v
+#' A phenotype vector for the single cells.
+#' 
+#' 
+#' @param diffvar
+#' A logical. Default is TRUE.
+#' Specifies whether the Gaussian mixture model to be fit assumes components 
+#' to have different (default) or equal variance.
+#' In the latter case, use *modelNames = c("E")*.
+#' 
+#' @param maxPS
+#' Maximum number of potency states, when inferring discrete potency 
+#' states of single cells. Default value is 5.
+#' 
+#' @return sr.o
+#' A list incorporating new elements:
+#' 
+#' @return sr.o$potencyState
+#' Inferred discrete potency states for each single cell. It is indexed so 
+#' that the index increases as the signaling entropy of the state decreases
+#' 
+#' @return sr.o$distPSPH
+#' If phenotype information provided, it will be a table giving the 
+#' distribution of single-cells across potency states and 
+#' phenotypes
+#' 
+#' @return sr.o$prob
+#' Table giving the probabilities of each potency state per phenotype value
+#' 
+#' @return sr.o$hetPS
+#' The normalised Shannon Index of potency per phenotype value
+#' 
+#' @references 
+#' Teschendorff AE, Tariq Enver. 
+#' \emph{Single-cell entropy for accurate estimation of differentiation 
+#' potency from a cell’s transcriptome.}
+#' Nature communications 8 (2017): 15599.
+#' doi:\href{https://doi.org/10.1038/ncomms15599}{
+#' 10.1038/ncomms15599}.
+#' 
+#' 
+#' 
+#' 
+#' @examples 
+#' 
+#' 
+#' 
+#' @import mclust
+#' @import cluster
+#' @import corpcor
+#' @import MASS
+#' @import parallel
+#' @import Biobase
+#' @import irlba
+#' @import Rtsne
+#' @importFrom dbscan dbscan
+#' @importFrom isva EstDimRMT
+#' @import SingleCellExperiment
+#' @importFrom SummarizedExperiment colData<- 
+#' @importFrom SummarizedExperiment colData
+#' @importFrom stats as.dist
+#' @importFrom stats cor
+#' @importFrom stats median
+#' @importFrom stats pnorm
+#' @importFrom stats sd
+#' @importFrom stats wilcox.test
+#' 
+#' @export
+#'     
+InferPotencyStates <- function(sr.o, pheno.v = NULL, diffvar = TRUE,maxPS = 5){
+
+    sr.v <- sr.o$SR
+    
+    ### fit Gaussian Mixture Model for potency inference
+    print("Fit Gaussian Mixture Model to Signaling Entropies")
+    logitSR.v <- log2(sr.v / (1 - sr.v))
+    if(diffvar == TRUE){ 
+        ## default assumes different variance for clusters
+        mcl.o <- Mclust(logitSR.v, G = seq_len(maxPS))
+    }
+    else {
+        mcl.o <- Mclust(logitSR.v, G = seq_len(maxPS), modelNames = c("E"))
+    }
+    potS.v <- mcl.o$class
+    nPS <- length(levels(as.factor(potS.v)))
+    print(paste("Identified ",nPS," potency states",sep=""))
+    for (i in seq_len(nPS)) {
+        names(potS.v[which(potS.v == i)]) <- rep(paste("PS",i,sep=""), 
+                                                 times = length(which(potS.v == i)))
+    }
+    
+    mu.v <- mcl.o$param$mean
+    sd.v <- sqrt(mcl.o$param$variance$sigmasq)
+    avSRps.v <- (2^mu.v)/(1+2^mu.v)
+    savSRps.s <- sort(avSRps.v, decreasing=TRUE, index.return=TRUE)
+    spsSid.v <- savSRps.s$ix
+    ordpotS.v <- match(potS.v,spsSid.v)
+    
+    if(!is.null(pheno.v)){
+        nPH <- length(levels(as.factor(pheno.v)))
+        distPSph.m <- table(pheno.v,ordpotS.v)
+        print("Compute Shannon (Heterogeneity) Index for each Phenotype class")
+        probPSph.m <- distPSph.m/apply(distPSph.m,1,sum)
+        hetPS.v <- vector()
+        for(ph in seq_len(nPH)){
+            prob.v <- probPSph.m[ph,]
+            sel.idx <- which(prob.v >0)
+            hetPS.v[ph] <- 
+                - sum(prob.v[sel.idx]*log(prob.v[sel.idx]))/log(nPS)
+        }
+        names(hetPS.v) <- rownames(probPSph.m)
+        print("Done")
+    }
+    else {
+        distPSph.m=NULL
+        probPSph.m=NULL
+        hetPS.v=NULL
+    }
+    
+    sr.o$potencyState <- ordpotS.v
+    
+    if (!is.null(pheno.v)) {
+        sr.o$distPSPH <- distPSph.m
+        sr.o$prob <- probPSph.m
+        sr.o$hetPS <- hetPS.v
+    }
+    
+    return(sr.o);
+}
