@@ -8,8 +8,8 @@ author:
 date: "`r Sys.Date()`"
 package: SCENT
 output:
-  BiocStyle::html_document:
-  toc_float: true
+    BiocStyle::html_document:
+    toc_float: true
 bibliography: SCENT.bib
 vignette: >
   %\VignetteIndexEntry{Single Cell Entropy - R package}
@@ -130,7 +130,7 @@ Because CCAT is just a Pearson Correlation Coefficient between the connectome an
 
 Having estimated the cell potency values, it may be of interest to determine if these values cluster into various potency states. This can be accomplished with the `InferPotencyStates` function, which fits a mixture of Gaussians to logit-transformed SR values, or Z-transformed CCAT values. If a categorical phenotype or labeling information of cells is available, the function will return the distribution of inferred potency states in each stratum defined by the phenotype. For instance, we could use the known hESC/EC label:
 
- ```{r InferPotency, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+```{r InferPotency, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
 pot.o <- InferPotencyStates(potest.v=srChu.v, pheno.v = phenoChu.v)
 ```
 
@@ -147,7 +147,7 @@ Thus, we have inferred 2 potency states, with the first potency state being occu
 
 Potency estimates obtained using SR or CCAT can be integrated with diffusion maps from the R-package `destiny` to assign the root-states when inferring lineage trajectories. We illustrate this in the context of a scRNA-Seq dataset representing a differentiation timecourse of mouse hepatoblasts into hepatocytes and cholangiocytes from [@YangLiver2017]. First, we load in the data:
 
- ```{r loadLiverData, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+```{r loadLiverData, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
 data(dataLiver);
 dim(scLiver.m);
 ```
