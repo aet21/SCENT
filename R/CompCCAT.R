@@ -54,7 +54,7 @@ CompCCAT <- function(exp.m, ppiA.m){
         exp.m <- log2(exp.m+1);
     }
     # get input class of data matrix
-    classMATRIX <- class(exp.m);
+    classMATRIX <- class(exp.m)[1];
     
     # set common gene IDs
     commonEID.v <- intersect(rownames(ppiA.m),rownames(exp.m));
