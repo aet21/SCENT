@@ -69,8 +69,10 @@ CompCCAT <- function(exp.m, ppiA.m){
 
     if(classMATRIX=="matrix"){ ## ordinary matrix
       ccat.v <- as.vector(cor(exp.m[match(commonEID.v,rownames(exp.m)),],k.v));
-    }
-    else if (classMATRIX=="dgCMatrix"){
+    } else if (classMATRIX=="dgeMatrix"){ # ordinary dense matrix in S4 Matrix representation. 
+      exp.m <- as.matrix(exp.m) # dense S4 matrix representation to base matrix presentation
+      ccat.v <- as.vector(cor(exp.m[match(commonEID.v,rownames(exp.m)),],k.v))
+    } else if (classMATRIX=="dgCMatrix"){
       ccat.v <- as.vector(corSparse(exp.m[match(commonEID.v,rownames(exp.m)),],Matrix(matrix(k.v,ncol=1))));
     }
     
