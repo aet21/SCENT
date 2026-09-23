@@ -1,12 +1,12 @@
 Package: SCENT
 Title: Single Cell Entropy
-Version: 1.0.3
+Version: 1.1
 Description: SCENT is an R-package for estimating differentiation
         potency of single cells from scRNA-Seq data. 
-Date: 2022-7-30
+Date: 2026-9-23
 Author:  Andrew E Teschendorff
 Maintainer: Andrew Teschendorff <andrew@picb.ac.cn>
-Depends: R (>= 3.6)
+Depends: R (>= 4.6)
 Imports: igraph, mclust, parallel, stats, Matrix, qlcMatrix, destiny, marray
 Suggests: roxygen2, BiocStyle, knitr, rmarkdown
 VignetteBuilder: knitr

@@ -85,7 +85,9 @@
 #'
 CompSRana <- function(integ.l, local = FALSE, mc.cores=1){
 
-    ### compute maxSR for SR normalization
+   integ.l$adjMC <- as(integ.l$adjMC, "dgCMatrix");
+
+ ### compute maxSR for SR normalization
     maxSR <- CompMaxSR(integ.l);
 
     idx.l <- as.list(seq_len(ncol(integ.l$expMC)));
@@ -109,7 +111,9 @@ CompSRana <- function(integ.l, local = FALSE, mc.cores=1){
 CompMaxSR <- function(integ.l){
     
     adj.m <- integ.l$adjMC
-    
+    if (!inherits(adj.m, "Matrix")){
+        adj.m <- Matrix::Matrix(adj.m, sparse = TRUE)
+    }
     # find right eigenvector of adjacency matrix
     fa <- function(x,extra=NULL) {
         as.vector(adj.m %*% x)
@@ -130,26 +134,42 @@ CompSRanaPRL <- function(idx,
                          local=TRUE,
                          maxSR=NULL)
 {
-    
-    # compute outgoing flux around each node
-    exp.v <- exp.m[,idx];
-    sumexp.v <- as.vector(adj.m %*% matrix(exp.v,ncol=1));
-    invP.v <- exp.v*sumexp.v;
+    n <- nrow(adj.m);
+
+    e <- exp.m[,idx];
+    if (inherits(e, "Matrix")) {e <- as.vector(e);}
+    s <- as.vector(adj.m %*% e);
+
+
+    invP.v <- e*s;
     nf <- sum(invP.v);
     invP.v <- invP.v/nf;
-    p.m <- t(t(adj.m)*exp.v)/sumexp.v;
-    S.v <- apply(p.m,1,CompS);
-    SR <- sum(invP.v*S.v);
-    # if provided then normalise relative to maxSR
-    if(is.null(maxSR)==FALSE){
-        SR <- SR/maxSR;
-    }
+    B <- adj.m;
+
+    B@x <- B@x * rep(e,diff(B@p));
+    Blog <- B;
+    nz <- Blog@x > 0   ;
+    Blog@x[nz]  <- Blog@x[nz] * log(Blog@x[nz]);
+    Blog@x[!nz] <- 0 ;
+
+    rB    <- Matrix::rowSums(B) ;
+    rBlog <- Matrix::rowSums(Blog) ;
+
+    S.v <- numeric(n);
+    good <- which(s>0);
+    S.v[good] <- log(s[good]) - rBlog[good]/s[good] ;
+
+    NS.v <- NULL;
     if(local){
-        NS.v <- apply(p.m,1,CompNS);
+        deg <- Matrix::rowSums(adj.m > 0);
+        NS.v <- numeric(n);
+        g2 <- which(deg > 1);
+        NS.v[g2] <- S.v[g2] / log(deg[g2]);
+    
     }
-    else {
-        NS.v <- NULL;
-    }
+    SR <- sum(invP.v * S.v);
+    if(!is.null(maxSR)){ SR <- SR/maxSR ;}
+
     return(list(sr=SR,inv=invP.v,locS=S.v,nlocS=NS.v));
 }
 

@@ -63,7 +63,7 @@
 #'
 #' 
 InferPotencyStates <- function(potest.v, type=c("SR","CCAT"), pheno.v = NULL, diffvar = TRUE,maxPS = 5){
-
+    type <- match.arg(type)
 
     if(type=="SR"){
     sr.v <- potest.v;
